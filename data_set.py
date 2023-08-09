@@ -86,3 +86,21 @@ def read_train(train_path):
         for row in csv_reader:
             data.append(row)
     return data
+
+# hospital
+def read_hospital(hospital_path):
+    data=[]
+    with open(hospital_path, "r", encoding="utf-8") as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            data.append(row)
+    return data
+
+# pharmacy
+def read_pharmacy(pharmacy_path):
+    data=[]
+    with open(pharmacy_path, "r", encoding="utf-8") as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            data.append(row)
+    return data
