@@ -26,8 +26,98 @@ td, th {
 tr:nth-child(even) {
   background-color: #dddddd;
 }
+
+.map_wrap {
+    position: relative;
+    width: 100%;
+    height: 80vh;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+#category {
+    position: absolute;
+    padding: 0px;
+    bottom: 10px;
+    right: 10px;
+    border-radius: 5px;
+    border: 1px solid #909090;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    background: #fff;
+    overflow: hidden;
+    z-index: 2;
+}
+#category li {
+    float: left;
+    list-style: none;
+    width: 100px;
+    border-right: 1px solid #acacac;
+    padding: 6px 0;
+    text-align: center;
+    cursor: pointer;
+}
+#category li.on {
+    background: rgb(221, 219, 219);
+}
+#category li:hover {
+    background: #bbb;
+    border-left: 1px solid #acacac;
+    margin-left: -1px;
+}
+#category li:last-child{
+    margin-right: 0;
+    border-right: 0;
+}
+#category li span {
+    display: block;
+    margin: 0 auto 3px;
+    width: 27px;
+    height: 28px;
+}
+
+#category li .culster_1 {
+    background-image:url("https://maps.google.com/mapfiles/ms/icons/green-dot.png");
+    background-size: 32px 32px;
+}
+#category li .culster_2 {
+    background-image:url("https://maps.google.com/mapfiles/ms/icons/orange-dot.png");
+    background-size: 32px 32px;
+}
+#category li .culster_3 {
+    background-image:url("https://maps.google.com/mapfiles/ms/icons/blue-dot.png");
+    background-size: 32px 32px;
+}
+#category li .culster_4 {
+    background-image:url("https://maps.google.com/mapfiles/ms/icons/pink-dot.png");
+    background-size: 32px 32px;
+}
 </style>
-<div id="map" style="width:100%;height:500px;"></div>
+<div class="map_wrap">
+	<!-- 지도 표시 -->
+	<div id="map"></div>
+	<!-- 지도 카테고리 -->
+	<ul id="category">
+		<li id="c_1" data-order="0"> 
+			<span class="category_bg culster_1"></span>
+			입지 1
+		</li>       
+		<li id="c_2" data-order="1"> 
+			<span class="category_bg culster_2"></span>
+			입지 2
+		</li>  
+		<li id="c_3" data-order="2"> 
+			<span class="category_bg culster_3"></span>
+			입지 3
+		</li>  
+		<li id="c_3" data-order="3"> 
+			<span class="category_bg culster_4"></span>
+			입지 4
+		</li>  
+	</ul>
+</div>
 <table id="resultList">[결과]
     <th>
         번호
@@ -40,66 +130,95 @@ tr:nth-child(even) {
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=41979012af7316007a2ae8c472e26718"></script>
 </body>
 <script>
-// 페이지 로드 시에 API 호출
-document.addEventListener("DOMContentLoaded", async () => {
-            try {
-                const response = await fetch("http://localhost:8000/apt/");  // API 엔드포인트 URL
-                const data = await response.json();
-                // document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                const resultList = document.getElementById("resultList");
-                idx=1
-                for (const item of data) {
-                    const tr = document.createElement("tr");
-                    const td = document.createElement("td");
-                    const td1 = document.createElement("td");
-                    const td2 = document.createElement("td");
-                    const td3 = document.createElement("td");
-                    td.textContent = idx++
-                    td1.textContent = item.name
-                    td2.textContent = item.apt_gene + '세대'
-                    td3.textContent = item.road_addr
-                    tr.appendChild(td);  // 가져온 데이터에서 원하는 속성 사용
-                    tr.appendChild(td1);  // 가져온 데이터에서 원하는 속성 사용
-                    tr.appendChild(td2);  // 가져온 데이터에서 원하는 속성 사용
-                    tr.appendChild(td3);  // 가져온 데이터에서 원하는 속성 사용
-                    // tr.textContent = '<td>' +item.name + '</td> <td>' + item.apt_gene + '세대</td><td>' + item.road_addr+'</td>';  // 가져온 데이터에서 원하는 속성 사용
-                    resultList.appendChild(tr);
-                };
 
-                var positions = [];
+    
+    // 페이지 로드 시에 API 호출
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const response = await fetch("http://localhost:8000/apt/");  // API 엔드포인트 URL
+            const data = await response.json();
+            // document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+            const resultList = document.getElementById("resultList");
+            idx=1
+            for (const item of data) {
+                const tr = document.createElement("tr");
+                const td = document.createElement("td");
+                const td1 = document.createElement("td");
+                const td2 = document.createElement("td");
+                const td3 = document.createElement("td");
+                td.textContent = idx++
+                td1.textContent = item.name
+                td2.textContent = item.apt_gene + '세대'
+                td3.textContent = item.road_addr
+                tr.appendChild(td);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td1);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td2);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td3);  // 가져온 데이터에서 원하는 속성 사용
+                // tr.textContent = '<td>' +item.name + '</td> <td>' + item.apt_gene + '세대</td><td>' + item.road_addr+'</td>';  // 가져온 데이터에서 원하는 속성 사용
+                resultList.appendChild(tr);
+            };
+            
+            // var positions = [];
+            
+            
+            const map = new kakao.maps.Map(document.getElementById('map'), {
+                center: new kakao.maps.LatLng(37.566535, 126.9779692),
+                level: 8
+            });
+            
+            for (const item of data){
+                
+                var imageSize = new kakao.maps.Size(32, 32);
+                var imageSrc_1 = "https://maps.google.com/mapfiles/ms/icons/green-dot.png"; //초록
+                var imageSrc_2 = "https://maps.google.com/mapfiles/ms/icons/orange-dot.png"; //주황
+                var imageSrc_3 = "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"; //빨강
+                var imageSrc_4 = "https://maps.google.com/mapfiles/ms/icons/pink-dot.png"; //빨강
+                var imageSrc = "https://maps.google.com/mapfiles/ms/icons/red-dot.png"; //현위치
+                
+                let imgSrc = ''
+                if (item.cluster == 0) {
+                    imgSrc = imageSrc_1
+                } else if (item.cluster == 1) {
+                    imgSrc = imageSrc_2
+                } else if (item.cluster == 2) {
+                    imgSrc = imageSrc_3
+                } else if (item.cluster == 3) {
+                    imgSrc = imageSrc_4
+                }
+                
+                let marker = new kakao.maps.Marker({
+                    map: map, 
+                    position: new kakao.maps.LatLng(item.y, item.x), 
+                    title : item.name, 
+                    image : new kakao.maps.MarkerImage(imgSrc, imageSize), 
+                    clickable: true 
+                });
+                
+                const infowindow = new kakao.maps.InfoWindow({
+                        content: '<div>'+item.name+'</div>'
+                    });
 
-                for (const item of data){
-                    const position = {
-                        content: '<div>'+item.name+'</div>',
-                        latlng: new kakao.maps.LatLng(item.y, item.x)
-                    };
-                    positions.push(position)
+                    kakao.maps.event.addListener(marker, 'mouseover', function() {
+                        infowindow.open(map, marker);
+                    });
+
+                    kakao.maps.event.addListener(marker, 'mouseout', function() {
+                        infowindow.close();
+                    });
+
+                    // const position = {
+                    //     content: '<div>'+item.name+'</div>',
+                    //     latlng: new kakao.maps.LatLng(item.y, item.x)
+                    // };
+                    // positions.push(position)
                 }
 
-                const map = new kakao.maps.Map(document.getElementById('map'), {
-                    center: new kakao.maps.LatLng(37.566535, 126.9779692),
-                    level: 5
-                });
-
-                for (const pos of positions) {
-                const marker = new kakao.maps.Marker({
-                    map: map,
-                    position: pos.latlng
-                });
-
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: pos.content
-                });
-
-                kakao.maps.event.addListener(marker, 'mouseover', function() {
-                    infowindow.open(map, marker);
-                });
-
-                kakao.maps.event.addListener(marker, 'mouseout', function() {
-                    infowindow.close();
-                });
-            }
-
+                // for (const pos of positions) {
+                //     const marker = new kakao.maps.Marker({
+                //         map: map,
+                //         position: pos.latlng
+                //     });
+                // }
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -196,5 +315,42 @@ for (var i = 0; i < positions.length; i ++) {
     })(marker, infowindow);
 }
 */
+
+function addCategoryClickEvent() {
+    var category = document.getElementById('category'),
+        children = category.children;
+
+    for (var i=0; i<children.length; i++) {
+        children[i].onclick = onClickCategory;
+    }
+}
+
+// 카테고리를 클릭했을 때 호출되는 함수입니다
+function onClickCategory() {
+    var id = this.id,
+        className = this.className;
+    if (className === 'on') { 
+        currCategory = '';
+        changeCategoryClass(); 
+    } else { 
+        currCategory = id;
+        changeCategoryClass(this);
+    }
+}
+
+// 클릭된 카테고리에만 클릭된 스타일을 적용하는 함수입니다
+function changeCategoryClass(el) {
+    var category = document.getElementById('category'),
+        children = category.children,
+        i;
+
+    for ( i = 0; i < children.length; i++ ) {
+        children[i].className = '';
+    }
+
+    if (el) {
+        el.className = 'on';
+    }
+}
 </script>
 </html>
