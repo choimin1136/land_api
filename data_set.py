@@ -1,10 +1,6 @@
 import csv
 from pathlib import Path
 
-
-
-
-
 # Read CSV file and return JSON type
 # apt
 def read_apt(apt_path):
