@@ -31,13 +31,33 @@ tr:nth-child(even) {
     position: relative;
     width: 100%;
     height: 80vh;
+    margin: 0px;
 }
 
 #map {
-    width: 100%;
+    width: 50%;
     height: 100%;
+    border-right: 1px solid black;
+    box-sizing: border-box;
+}
+#map2 {
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    right: 0px;
+    top:0px;
 }
 
+#search_apt {
+    position: absolute;
+    padding: 0px;
+    top: 10px;
+    left: 10px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    z-index: 2;
+}
 #category {
     position: absolute;
     padding: 0px;
@@ -98,6 +118,11 @@ tr:nth-child(even) {
 <div class="map_wrap">
 	<!-- 지도 표시 -->
 	<div id="map"></div>
+	<div id="map2"></div>
+    <div id="search_apt">
+        <input type="text" id="search_val" value=""/>
+        <input type="button" value="Search" onclick="setCenter(map)"/>
+    </div>
 	<!-- 지도 카테고리 -->
 	<ul id="category">
 		<li id="c_1" data-order="0"> 
@@ -124,19 +149,33 @@ tr:nth-child(even) {
         <td>아파트 명</td>
         <td>세대 수</td>
         <td>도로명 주소</td>
+        <td>버스정류장</td>
+        <td>지하철역</td>
+        <td>초등학교</td>
     </th>
 </table>
 
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=41979012af7316007a2ae8c472e26718"></script>
 </body>
 <script>
+    let circle = null; 
+    let circle2= null;
+    let data=null;
 
+    var map = new kakao.maps.Map(document.getElementById('map'), {
+        center: new kakao.maps.LatLng(37.566535, 126.9779692),
+        level: 9
+    });
+    var map2 = new kakao.maps.Map(document.getElementById('map2'), {
+        center: new kakao.maps.LatLng(37.566535, 126.9779692),
+        level: 9
+    });
     
     // 페이지 로드 시에 API 호출
     document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await fetch("http://localhost:8000/apt/");  // API 엔드포인트 URL
-            const data = await response.json();
+            data = await response.json();
             // document.getElementById("result").textContent = JSON.stringify(data, null, 2);
             const resultList = document.getElementById("resultList");
             idx=1
@@ -146,14 +185,23 @@ tr:nth-child(even) {
                 const td1 = document.createElement("td");
                 const td2 = document.createElement("td");
                 const td3 = document.createElement("td");
+                const td4 = document.createElement("td");
+                const td5 = document.createElement("td");
+                const td6 = document.createElement("td");
                 td.textContent = idx++
                 td1.textContent = item.name
                 td2.textContent = item.apt_gene + '세대'
                 td3.textContent = item.road_addr
+                td4.textContent = item.bus_n
+                td5.textContent = parseInt(item.train_n)
+                td6.textContent = item.eschool_n
                 tr.appendChild(td);  // 가져온 데이터에서 원하는 속성 사용
                 tr.appendChild(td1);  // 가져온 데이터에서 원하는 속성 사용
                 tr.appendChild(td2);  // 가져온 데이터에서 원하는 속성 사용
                 tr.appendChild(td3);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td4);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td5);  // 가져온 데이터에서 원하는 속성 사용
+                tr.appendChild(td6);  // 가져온 데이터에서 원하는 속성 사용
                 // tr.textContent = '<td>' +item.name + '</td> <td>' + item.apt_gene + '세대</td><td>' + item.road_addr+'</td>';  // 가져온 데이터에서 원하는 속성 사용
                 resultList.appendChild(tr);
             };
@@ -161,10 +209,7 @@ tr:nth-child(even) {
             // var positions = [];
             
             
-            const map = new kakao.maps.Map(document.getElementById('map'), {
-                center: new kakao.maps.LatLng(37.566535, 126.9779692),
-                level: 8
-            });
+
             
             for (const item of data){
                 
@@ -190,29 +235,182 @@ tr:nth-child(even) {
                     map: map, 
                     position: new kakao.maps.LatLng(item.y, item.x), 
                     title : item.name, 
-                    image : new kakao.maps.MarkerImage(imgSrc, imageSize), 
-                    clickable: true 
+                    image : new kakao.maps.MarkerImage(imgSrc, imageSize),
+                    clickable : true
                 });
                 
                 const infowindow = new kakao.maps.InfoWindow({
                         content: '<div>'+item.name+'</div>'
-                    });
+                });
 
-                    kakao.maps.event.addListener(marker, 'mouseover', function() {
-                        infowindow.open(map, marker);
-                    });
+                kakao.maps.event.addListener(marker, 'mouseover', function() {
+                    infowindow.open(map, marker);
+                });
 
-                    kakao.maps.event.addListener(marker, 'mouseout', function() {
-                        infowindow.close();
-                    });
+                kakao.maps.event.addListener(marker, 'mouseout', function() {
+                    infowindow.close();
+                });
 
                     // const position = {
                     //     content: '<div>'+item.name+'</div>',
                     //     latlng: new kakao.maps.LatLng(item.y, item.x)
                     // };
                     // positions.push(position)
-                }
 
+                // 원 설정
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    if (circle) {
+                        circle.setMap(null);
+                    }
+
+                    // alert(marker.getPosition())
+                    circle = new kakao.maps.Circle({
+                            center: marker.getPosition(),
+                            radius: 800,  // 1km
+                            // strokeWeight: 2,
+                            // strokeColor: '#75B8FA',
+                            // strokeOpacity: 1,
+                            // fillColor: '#007bff',
+                            // fillOpacity: 0.3
+                            // strokeWeight: 5, // 선의 두께입니다 
+                            strokeColor: '#75B8FA', // 선의 색깔입니다
+                            strokeOpacity: 1, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                            // strokeStyle: 'dashed', // 선의 스타일 입니다
+                            fillColor: '#CFE7FF', // 채우기 색깔입니다
+                            fillOpacity: 0.3  // 채우기 불투명도 입니다   
+                        });
+
+                    circle.setMap(map)
+                });
+                    
+                    
+            }
+                
+                // for (const pos of positions) {
+                //     const marker = new kakao.maps.Marker({
+                //         map: map,
+                //         position: pos.latlng
+                //     });
+                // }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        });
+    // 페이지 로드 시에 API 호출
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const response = await fetch("http://localhost:8000/apt/2");  // API 엔드포인트 URL
+            data = await response.json();
+            // document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+            // const resultList = document.getElementById("resultList");
+            // idx=1
+            // for (const item of data) {
+            //     const tr = document.createElement("tr");
+            //     const td = document.createElement("td");
+            //     const td1 = document.createElement("td");
+            //     const td2 = document.createElement("td");
+            //     const td3 = document.createElement("td");
+            //     const td4 = document.createElement("td");
+            //     const td5 = document.createElement("td");
+            //     const td6 = document.createElement("td");
+            //     td.textContent = idx++
+            //     td1.textContent = item.name
+            //     td2.textContent = item.apt_gene + '세대'
+            //     td3.textContent = item.road_addr
+            //     td4.textContent = item.bus_n
+            //     td5.textContent = parseInt(item.train_n)
+            //     td6.textContent = item.eschool_n
+            //     tr.appendChild(td);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td1);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td2);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td3);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td4);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td5);  // 가져온 데이터에서 원하는 속성 사용
+            //     tr.appendChild(td6);  // 가져온 데이터에서 원하는 속성 사용
+            //     // tr.textContent = '<td>' +item.name + '</td> <td>' + item.apt_gene + '세대</td><td>' + item.road_addr+'</td>';  // 가져온 데이터에서 원하는 속성 사용
+            //     resultList.appendChild(tr);
+            // };
+            
+            // var positions = [];
+            
+            
+
+            
+            for (const item of data){
+                
+                var imageSize = new kakao.maps.Size(32, 32);
+                var imageSrc_1 = "https://maps.google.com/mapfiles/ms/icons/green-dot.png"; //초록
+                var imageSrc_2 = "https://maps.google.com/mapfiles/ms/icons/orange-dot.png"; //주황
+                var imageSrc_3 = "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"; //빨강
+                var imageSrc_4 = "https://maps.google.com/mapfiles/ms/icons/pink-dot.png"; //빨강
+                var imageSrc = "https://maps.google.com/mapfiles/ms/icons/red-dot.png"; //현위치
+                
+                let imgSrc = ''
+                if (item.cluster == 0) {
+                    imgSrc = imageSrc_1
+                } else if (item.cluster == 1) {
+                    imgSrc = imageSrc_2
+                } else if (item.cluster == 2) {
+                    imgSrc = imageSrc_3
+                } else if (item.cluster == 3) {
+                    imgSrc = imageSrc_4
+                }
+                
+                let marker = new kakao.maps.Marker({
+                    map: map2, 
+                    position: new kakao.maps.LatLng(item.y, item.x), 
+                    title : item.name, 
+                    image : new kakao.maps.MarkerImage(imgSrc, imageSize),
+                    clickable : true
+                });
+                
+                const infowindow = new kakao.maps.InfoWindow({
+                        content: '<div>'+item.name+'</div>'
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseover', function() {
+                    infowindow.open(map2, marker);
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseout', function() {
+                    infowindow.close();
+                });
+
+                    // const position = {
+                    //     content: '<div>'+item.name+'</div>',
+                    //     latlng: new kakao.maps.LatLng(item.y, item.x)
+                    // };
+                    // positions.push(position)
+
+                // 원 설정
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    if (circle2) {
+                        circle2.setMap(null);
+                    }
+
+                    // alert(marker.getPosition())
+                    circle2 = new kakao.maps.Circle({
+                            center: marker.getPosition(),
+                            radius: 1500,  // 1km
+                            // strokeWeight: 2,
+                            // strokeColor: '#75B8FA',
+                            // strokeOpacity: 1,
+                            // fillColor: '#007bff',
+                            // fillOpacity: 0.3
+                            // strokeWeight: 5, // 선의 두께입니다 
+                            strokeColor: '#75B8FA', // 선의 색깔입니다
+                            strokeOpacity: 1, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                            // strokeStyle: 'dashed', // 선의 스타일 입니다
+                            fillColor: '#CFE7FF', // 채우기 색깔입니다
+                            fillOpacity: 0.3  // 채우기 불투명도 입니다   
+                        });
+
+                    circle2.setMap(map2)
+                });
+                    
+                    
+            }
+                
                 // for (const pos of positions) {
                 //     const marker = new kakao.maps.Marker({
                 //         map: map,
@@ -315,6 +513,47 @@ for (var i = 0; i < positions.length; i ++) {
     })(marker, infowindow);
 }
 */
+
+function setCenter(map){
+    var new_center = null;
+    var text_box=document.getElementById('search_val');
+    if (text_box != ''){
+        for (const item of data){
+            if (text_box.value == item.name){
+                new_center=item
+                // alert(item.name)
+            }
+        }
+    }
+    // alert(new_center.name)
+    if (new_center){
+        var moveLatLon = new kakao.maps.LatLng(new_center.y,new_center.x)
+        if (circle) {
+                circle.setMap(null);
+        };
+        circle = new kakao.maps.Circle({
+            center: moveLatLon,
+            radius: 800,  // 1km
+            // strokeWeight: 2,
+            // strokeColor: '#75B8FA',
+            // strokeOpacity: 1,
+            // fillColor: '#007bff',
+            // fillOpacity: 0.3
+            // strokeWeight: 5, // 선의 두께입니다 
+            strokeColor: '#75B8FA', // 선의 색깔입니다
+            strokeOpacity: 1, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+            // strokeStyle: 'dashed', // 선의 스타일 입니다
+            fillColor: '#CFE7FF', // 채우기 색깔입니다
+            fillOpacity: 0.3  // 채우기 불투명도 입니다   
+        });
+        circle.setMap(map);
+        map.panTo(moveLatLon);
+    }else{
+        alert('\"'+text_box.value + '\"은(는) 데이터가 없습니다.')
+    }
+
+}
+            
 
 function addCategoryClickEvent() {
     var category = document.getElementById('category'),

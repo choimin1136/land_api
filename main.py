@@ -39,6 +39,7 @@ road_path=Path('/Users/hyeok/Desktop/Development/Python/ai_project/land_api/data
 train_path=Path('/Users/hyeok/Desktop/Development/Python/ai_project/land_api/data_table/train.csv')
 hospital_path=Path('/Users/hyeok/Desktop/Development/Python/ai_project/land_api/data_table/hospital.csv')
 pharmacy_path=Path('/Users/hyeok/Desktop/Development/Python/ai_project/land_api/data_table/pharmacy.csv')
+admin_path=Path('/Users/hyeok/Desktop/Development/Python/ai_project/land_api/data_table/admin.csv')
 
 # 메인페이지 접속시 html 파일 전송
 from fastapi.responses import FileResponse
@@ -112,6 +113,11 @@ async def call_back_data():
 @app.get("/pharmacy")
 async def call_back_data():
     data=data_set.read_apt(pharmacy_path)
+    return data
+
+@app.get("/admin")
+async def call_back_data():
+    data=data_set.read_apt(admin_path)
     return data
 
 # 데이터 받을거면 모델 class 생성 필수
