@@ -192,9 +192,9 @@ tr:nth-child(even) {
                 td1.textContent = item.name
                 td2.textContent = item.apt_gene + '세대'
                 td3.textContent = item.road_addr
-                td4.textContent = item.bus_n
+                td4.textContent = parseInt(item.bus_n)
                 td5.textContent = parseInt(item.train_n)
-                td6.textContent = item.eschool_n
+                td6.textContent = parseInt(item.eschool_n)
                 tr.appendChild(td);  // 가져온 데이터에서 원하는 속성 사용
                 tr.appendChild(td1);  // 가져온 데이터에서 원하는 속성 사용
                 tr.appendChild(td2);  // 가져온 데이터에서 원하는 속성 사용
